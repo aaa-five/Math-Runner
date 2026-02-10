@@ -14,3 +14,15 @@ public class Test : MonoBehaviour
        
     }
 }
+
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+
+public class Test : MonoBehaviour
+{
+    public void PlayGame()
+    {
+        SceneManagement.LoadScene("Math Runner");
+    }
+}

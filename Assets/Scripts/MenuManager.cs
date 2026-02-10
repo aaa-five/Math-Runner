@@ -13,9 +13,7 @@ public class Test : MonoBehaviour
     {
        
     }
-}   
-
-
-sdasfasda
+}
 
  
+

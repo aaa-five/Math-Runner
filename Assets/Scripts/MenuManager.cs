@@ -65,3 +65,54 @@ public class CameraFollow : MonoBehaviour
         transform.LookAt(target);
     }
 }
+
+using UnityEngine;
+using System.Collections.Generic;
+
+public class EndlessRoadManager : MonoBehaviour
+{
+    // List to hold the road sections currently in the scene
+    public List<GameObject> activeRoadSections; 
+    public GameObject[] roadPrefabs; // Array of different road prefabs (for variety)
+    public float roadSpeed;
+    public float sectionLength = 100f; // Length of a single road prefab
+    public Transform playerTransform; // Reference to the player car's transform
+
+    void Start()
+    {
+        // Instantiate initial sections or use the ones already in the scene
+        // (You can use object pooling for better performance as your game grows)
+    }
+
+    void Update()
+    {
+        // Move the road sections towards the player
+        foreach (var road in activeRoadSections)
+        {
+            // Move the road using transform.Translate or by modifying transform.position
+            // Ensure you use Time.deltaTime for consistent speed across different frame rates
+            road.transform.Translate(Vector3.back * roadSpeed * Time.deltaTime);
+        }
+
+        // Check if the first section is behind the player and needs to be moved to the end
+        if (activeRoadSections.Count > 0 && activeRoadSections[0].transform.position.z < playerTransform.position.z - sectionLength)
+        {
+            MoveRoadSection();
+        }
+    }
+
+    void MoveRoadSection()
+    {
+        // Get the first (oldest) section
+        GameObject movedSection = activeRoadSections[0];
+        activeRoadSections.RemoveAt(0);
+
+        // Calculate the new position: the end of the last section currently in front
+        // The position is calculated by adding the sectionLength to the last section's Z position
+        float newZPosition = activeRoadSections[activeRoadSections.Count - 1].transform.position.z + sectionLength;
+        movedSection.transform.position = new Vector3(0, 0, newZPosition);
+
+        // Add the moved section to the end of the list
+        activeRoadSections.Add(movedSection);
+    }
+}

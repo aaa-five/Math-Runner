@@ -1,1 +1,20 @@
+using UnityEngine;
 
+public class CarHandler : MonoBehaviour
+{
+public float moveSpeed = 8f;
+public float laneLimit = 0.5f;
+
+void Update()
+{
+    float horizontal = Input.GetAxis("Horizontal");
+
+    Vector3 move = new Vector3(horizontal * moveSpeed * Time.deltaTime, 0, 0);
+    transform.Translate(move);
+
+    // Clamp position
+    Vector3 pos = transform.position;
+    pos.x = Mathf.Clamp(pos.x, -laneLimit, laneLimit);
+    transform.position = pos;
+}
+}

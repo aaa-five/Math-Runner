@@ -3,7 +3,7 @@ using UnityEngine;
 public class CarHandler : MonoBehaviour
 {
 public float moveSpeed = 8f;
-public float laneLimit = 0.5f;
+public float laneLimit = 1.5f;
 
 void Update()
 {

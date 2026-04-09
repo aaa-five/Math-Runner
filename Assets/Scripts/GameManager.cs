@@ -8,14 +8,21 @@ public class GameManager : MonoBehaviour
 {
     [Header("Flash Overlay")]
     public Image screenFlash;
+
     [Header("Audio")]
-public AudioSource audioSource;
-public AudioClip winSound;
-public AudioClip failSound;
+    public AudioSource audioSource;
+    public AudioClip winSound;
+    public AudioClip failSound;
 
     [Header("Score Rules")]
     public int maxWrong = 3;
     public int maxCorrect = 5;
+
+    [Header("Tutorial Settings")]
+    public GameObject tutorialTextObject; // Assign your "Swipe" text here
+    public int tutorialTarget = 1;        // Set to 1 for now, change to 5 later
+    private int tutorialProgress = 0;
+
     [Header("Crash Settings")]
     public GameObject playerCar;
     public float crashDuration = 1.5f;
@@ -25,26 +32,25 @@ public AudioClip failSound;
     public ParticleSystem crashExplosion;       // optional explosion effect
     public Transform explosionSpawnPoint;       // where the explosion appears
 
-[Header("UI (Lights + Counters)")]
-public GameObject topLeftUI;
-public TextMeshProUGUI correctText;
-public TextMeshProUGUI wrongText;
-public Image correctLight;
-public Image wrongLight;
+    [Header("UI (Lights + Counters)")]
+    public GameObject topLeftUI;
+    public TextMeshProUGUI correctText;
+    public TextMeshProUGUI wrongText;
+    public Image correctLight;
+    public Image wrongLight;
 
-public Color lightOff = new Color(1f, 1f, 1f, 0.25f);
-public Color lightOn = new Color(1f, 1f, 1f, 1f);
+    public Color lightOff = new Color(1f, 1f, 1f, 0.25f);
+    public Color lightOn = new Color(1f, 1f, 1f, 1f);
 
-public TextMeshProUGUI resultText;
-public GameObject winScreen;
-public GameObject loseScreen;
-public Button[] backButtons;
-public Button[] nextButtons;
+    public TextMeshProUGUI resultText;
+    public GameObject winScreen;
+    public GameObject loseScreen;
+    public Button[] backButtons;
+    public Button[] nextButtons;
     public int correctAnswer;
 
     private int lives;
     private int correctCount;
-
     private int wrongCount;
 
     private Coroutine correctLightRoutine;
@@ -58,62 +64,64 @@ public Button[] nextButtons;
 
     void Start()
     {
+        // Check if this is Level 1. If not, turn off tutorial text immediately.
+        if (LevelSelectionMenuManager.selectedLevelIndex != 0 && tutorialTextObject != null)
+        {
+            tutorialTextObject.SetActive(false);
+        }
+
         StartRun();
     }
 
-public void StartRun()
-{
-    // ✅ ADD THESE 2 BLOCKS AT THE VERY TOP
-    currentLevelConfig = FindFirstObjectByType<LevelConfig>();
-
-    if (currentLevelConfig != null)
+    public void StartRun()
     {
-        maxCorrect = currentLevelConfig.correctNeeded;
-        maxWrong = currentLevelConfig.wrongAllowed;
+        currentLevelConfig = FindFirstObjectByType<LevelConfig>();
+
+        if (currentLevelConfig != null)
+        {
+            maxCorrect = currentLevelConfig.correctNeeded;
+            maxWrong = currentLevelConfig.wrongAllowed;
+        }
+
+        runEnded = false;
+        lives = maxWrong;
+        correctCount = 0;
+        wrongCount = 0;
+        tutorialProgress = 0; // Reset tutorial progress on restart
+
+        if (correctLight) correctLight.color = lightOff;
+        if (wrongLight) wrongLight.color = lightOff;
+
+        if (topLeftUI != null)
+            topLeftUI.SetActive(true);
+
+        if (winScreen) winScreen.SetActive(false);
+        if (loseScreen) loseScreen.SetActive(false);
+
+        if (resultText)
+        {
+            resultText.text = "";
+            resultText.gameObject.SetActive(false);
+        }
+
+        if (screenFlash) screenFlash.color = new Color(0, 0, 0, 0);
+
+        foreach (Button btn in nextButtons)
+        {
+            if (btn != null)
+                btn.gameObject.SetActive(true);
+        }
+
+        foreach (MonoBehaviour script in carControlScripts)
+        {
+            if (script != null)
+                script.enabled = true;
+        }
+
+        Time.timeScale = 1f;
+        UpdateUI();
     }
 
-    // 👇 EVERYTHING BELOW IS YOUR ORIGINAL CODE (unchanged)
-
-    runEnded = false;
-    lives = maxWrong;        
-    correctCount = 0;
-
-    wrongCount = 0;
-
-    if (correctLight) correctLight.color = lightOff;
-    if (wrongLight) wrongLight.color = lightOff;
-
-    if (topLeftUI != null)
-        topLeftUI.SetActive(true);
-
-    if (winScreen) winScreen.SetActive(false);
-    if (loseScreen) loseScreen.SetActive(false);
-
-    if (resultText)
-    {
-        resultText.text = "";
-        resultText.gameObject.SetActive(false);
-    }
-
-    if (screenFlash) screenFlash.color = new Color(0, 0, 0, 0);
-
-    foreach (Button btn in nextButtons)
-    {
-        if (btn != null)
-            btn.gameObject.SetActive(true);
-    }
-
-    // ✅ ADDED: re-enable player control whenever the run starts again
-    foreach (MonoBehaviour script in carControlScripts)
-    {
-        if (script != null)
-            script.enabled = true;
-    }
-
-    Time.timeScale = 1f;
-
-    UpdateUI();
-}
     public void NewQuestion(int newCorrectAnswer)
     {
         if (runEnded) return;
@@ -149,12 +157,22 @@ public void StartRun()
         if (isCorrect)
         {
             correctCount++;
-            
+
+            // --- TUTORIAL LOGIC ---
+            if (tutorialTextObject != null && tutorialTextObject.activeSelf)
+            {
+                tutorialProgress++;
+                if (tutorialProgress >= tutorialTarget)
+                {
+                    tutorialTextObject.SetActive(false);
+                }
+            }
+
             if (correctLightRoutine != null)
-            StopCoroutine(correctLightRoutine);
+                StopCoroutine(correctLightRoutine);
 
             correctLightRoutine = StartCoroutine(FlashLight(correctLight));
-            
+
             UpdateUI();
 
             if (correctCount >= maxCorrect)
@@ -162,28 +180,28 @@ public void StartRun()
                 EndRun(win: true);
             }
         }
-            else
-{
-    lives--;
-    wrongCount++;
-    UpdateUI();
+        else
+        {
+            lives--;
+            wrongCount++;
+            UpdateUI();
 
-    if (wrongLightRoutine != null)
-        StopCoroutine(wrongLightRoutine);
+            if (wrongLightRoutine != null)
+                StopCoroutine(wrongLightRoutine);
 
-    wrongLightRoutine = StartCoroutine(FlashLight(wrongLight));
+            wrongLightRoutine = StartCoroutine(FlashLight(wrongLight));
 
-    if (lives <= 0)
-    {
-        StartCoroutine(CrashSequence());
+            if (lives <= 0)
+            {
+                StartCoroutine(CrashSequence());
+            }
+        }
     }
-}
-    }
+
     private IEnumerator CrashSequence()
     {
         runEnded = true;
 
-        // Hide temporary Correct!/Wrong! text immediately
         if (resultTextRoutine != null)
         {
             StopCoroutine(resultTextRoutine);
@@ -198,19 +216,16 @@ public void StartRun()
 
         if (playerCar == null)
         {
-            Debug.LogWarning("Player car is not assigned in GameManager.");
             EndRun(false);
             yield break;
         }
 
-        // ✅ Disable player control so the crash feels like a cutscene
         foreach (MonoBehaviour script in carControlScripts)
         {
             if (script != null)
                 script.enabled = false;
         }
 
-        // ✅ Spawn explosion effect
         if (crashExplosion != null)
         {
             Vector3 spawnPos = playerCar.transform.position;
@@ -228,27 +243,16 @@ public void StartRun()
         }
 
         float timer = 0f;
-        Quaternion startRotation = playerCar.transform.rotation;
-
-    while (timer < crashDuration)
-{
-    timer += Time.deltaTime;
-
-    // Spin horizontally
-    float spinY = crashSpinSpeed * Time.deltaTime;
-    playerCar.transform.Rotate(0f, spinY, 0f, Space.World);
-
-    // Get rotation
-    Vector3 rot = playerCar.transform.eulerAngles;
-
-    // Wobble effect
-    float wobble = Mathf.Sin(timer * 20f) * 5f;
-
-    // Apply rotation
-    playerCar.transform.rotation = Quaternion.Euler(0f, rot.y, wobble);
-
-    yield return null;
-}
+        while (timer < crashDuration)
+        {
+            timer += Time.deltaTime;
+            float spinY = crashSpinSpeed * Time.deltaTime;
+            playerCar.transform.Rotate(0f, spinY, 0f, Space.World);
+            Vector3 rot = playerCar.transform.eulerAngles;
+            float wobble = Mathf.Sin(timer * 20f) * 5f;
+            playerCar.transform.rotation = Quaternion.Euler(0f, rot.y, wobble);
+            yield return null;
+        }
         EndRun(false);
     }
 
@@ -256,15 +260,6 @@ public void StartRun()
     {
         runEnded = true;
 
-        if (audioSource != null)
-    {
-        if (win && winSound != null)
-            audioSource.PlayOneShot(winSound);
-        else if (!win && failSound != null)
-            audioSource.PlayOneShot(failSound);
-    }
-
-        // Hide temporary Correct!/Wrong! text immediately when level ends
         if (resultTextRoutine != null)
         {
             StopCoroutine(resultTextRoutine);
@@ -278,37 +273,34 @@ public void StartRun()
         }
 
         if (topLeftUI != null)
-        topLeftUI.SetActive(false);
+            topLeftUI.SetActive(false);
 
         if (win)
         {
             LevelGameplayManager levelManager = FindFirstObjectByType<LevelGameplayManager>();
-
             if (levelManager != null)
             {
                 levelManager.CompleteLevel();
-                Debug.Log("LEVEL COMPLETED CALLED");
             }
         }
-        IEnumerator PlayEndSound(bool win)
-{
-    if (audioSource != null)
-    {
-        if (win && winSound != null)
-            audioSource.PlayOneShot(winSound);
-        else if (!win && failSound != null)
-            audioSource.PlayOneShot(failSound);
-    }
-
-    yield return new WaitForSecondsRealtime(0.5f); // small delay so sound plays
-}
 
         if (winScreen) winScreen.SetActive(win);
         if (loseScreen) loseScreen.SetActive(!win);
 
         UpdateResultButtons(win);
-
         StartCoroutine(PlayEndSound(win));
+    }
+
+    private IEnumerator PlayEndSound(bool win)
+    {
+        if (audioSource != null)
+        {
+            if (win && winSound != null)
+                audioSource.PlayOneShot(winSound);
+            else if (!win && failSound != null)
+                audioSource.PlayOneShot(failSound);
+        }
+        yield return new WaitForSecondsRealtime(0.5f);
     }
 
     public void ReturnToLevelSelect()
@@ -324,66 +316,54 @@ public void StartRun()
         SceneManager.LoadScene("Math Runner 1.0 Game Assets");
     }
 
-public void NextLevel()
-{
-    LevelGameplayManager levelManager = FindFirstObjectByType<LevelGameplayManager>();
-
-    if (levelManager == null)
-        return;
-
-    int totalLevels = levelManager.GetCurrentCategoryLevelCount();
-
-    if (LevelSelectionMenuManager.selectedLevelIndex >= totalLevels - 1)
-        return;
-
-    Time.timeScale = 1f;
-    LevelSelectionMenuManager.selectedLevelIndex++;
-    SceneManager.LoadScene("Math Runner 1.0 Game Assets");
-}
-private void UpdateResultButtons(bool win)
-{
-    bool canGoBack = LevelSelectionMenuManager.selectedLevelIndex > 0;
-
-    foreach (Button btn in backButtons)
+    public void NextLevel()
     {
-        if (btn != null)
-            btn.interactable = canGoBack;
+        LevelGameplayManager levelManager = FindFirstObjectByType<LevelGameplayManager>();
+        if (levelManager == null) return;
+
+        int totalLevels = levelManager.GetCurrentCategoryLevelCount();
+        if (LevelSelectionMenuManager.selectedLevelIndex >= totalLevels - 1) return;
+
+        Time.timeScale = 1f;
+        LevelSelectionMenuManager.selectedLevelIndex++;
+        SceneManager.LoadScene("Math Runner 1.0 Game Assets");
     }
 
-    LevelGameplayManager levelManager = FindFirstObjectByType<LevelGameplayManager>();
-    int totalLevels = 0;
-
-    if (levelManager != null)
-        totalLevels = levelManager.GetCurrentCategoryLevelCount();
-
-    bool canGoNext = win && LevelSelectionMenuManager.selectedLevelIndex < totalLevels - 1;
-
-    foreach (Button btn in nextButtons)
+    private void UpdateResultButtons(bool win)
     {
-        if (btn != null)
-            btn.gameObject.SetActive(canGoNext);
+        bool canGoBack = LevelSelectionMenuManager.selectedLevelIndex > 0;
+        foreach (Button btn in backButtons)
+        {
+            if (btn != null) btn.interactable = canGoBack;
+        }
+
+        LevelGameplayManager levelManager = FindFirstObjectByType<LevelGameplayManager>();
+        int totalLevels = 0;
+        if (levelManager != null)
+            totalLevels = levelManager.GetCurrentCategoryLevelCount();
+
+        bool canGoNext = win && LevelSelectionMenuManager.selectedLevelIndex < totalLevels - 1;
+        foreach (Button btn in nextButtons)
+        {
+            if (btn != null) btn.gameObject.SetActive(canGoNext);
+        }
     }
-}
 
     private void UpdateUI()
-{
-    if (correctText)
-        correctText.text = correctCount + " / " + maxCorrect;
+    {
+        if (correctText)
+            correctText.text = correctCount + " / " + maxCorrect;
 
-    if (wrongText)
-        wrongText.text = wrongCount + " / " + maxWrong;
-}
+        if (wrongText)
+            wrongText.text = wrongCount + " / " + maxWrong;
+    }
 
     IEnumerator ShowResultText(string message)
     {
-        if (resultText == null)
-            yield break;
-
+        if (resultText == null) yield break;
         resultText.text = message;
         resultText.gameObject.SetActive(true);
-
         yield return new WaitForSeconds(0.8f);
-
         resultText.gameObject.SetActive(false);
         resultTextRoutine = null;
     }
@@ -392,30 +372,22 @@ private void UpdateResultButtons(bool win)
     {
         float duration = 0.5f;
         float timer = 0f;
-
         while (timer < duration)
         {
             timer += Time.unscaledDeltaTime;
             float alpha = Mathf.Lerp(0.5f, 0f, timer / duration);
-
             if (screenFlash)
                 screenFlash.color = new Color(color.r, color.g, color.b, alpha);
-
             yield return null;
         }
-
-        if (screenFlash)
-            screenFlash.color = new Color(0, 0, 0, 0);
+        if (screenFlash) screenFlash.color = new Color(0, 0, 0, 0);
     }
+
     IEnumerator FlashLight(Image light)
     {
-    if (light == null)
-        yield break;
-
-    light.color = lightOn;
-
-    yield return new WaitForSeconds(0.4f);
-
-    light.color = lightOff;
+        if (light == null) yield break;
+        light.color = lightOn;
+        yield return new WaitForSeconds(0.4f);
+        light.color = lightOff;
     }
 }

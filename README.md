@@ -1,12 +1,12 @@
-Math Runner 🛣️🚗💨
+### Math Runner 🛣️🚗💨
 
-📌 Overview
+##📌 Overview
 
 Math Runner is a fast-paced educational Unity game designed for elementary-level students. Players control a moving vehicle that progresses forward by correctly solving basic math problems.
 
 The game helps students practice addition, subtraction, multiplication, and division in a fun and interactive way.
 
-🚀 Features
+# 🚀 Features
 
 Vehicle-based endless runner-style gameplay
 
@@ -28,7 +28,7 @@ Designed for elementary school learning reinforcement
 
 Built in Unity for mobile and/or PC
 
-🎮 Gameplay
+# 🎮 Gameplay
 
 Players control a moving vehicle that continuously advances through a track of math challenges.
 
@@ -46,7 +46,7 @@ Incorrect answers may slow progress or end the run (depending on game rules)
 
 The goal is to strengthen quick mental math skills while maintaining momentum in the game.
 
-🛠️ Built With
+# 🛠️ Built With
 
 Unity Engine
 
@@ -54,7 +54,7 @@ C# scripting
 
 Unity UI system
 
-📂 Project Structure (Suggested)
+# 📂 Project Structure (Suggested)
 
 Assets/
   Scripts/
@@ -62,7 +62,7 @@ Assets/
   Prefabs/
   UI/
 
-📱 How to Play (Mobile Build)
+# 📱 How to Play (Mobile Build)
 
 Install the APK (Android build)
 
@@ -72,7 +72,7 @@ Swipe left or right to select answers
 
 Solve math problems to keep your vehicle moving forward
 
-🎯 Educational Purpose
+# 🎯 Educational Purpose
 
 This game is designed to help elementary students:
 
@@ -84,7 +84,7 @@ Build fast decision-making skills
 
 Learn through interactive gameplay
 
-💡 Future Improvements
+# 💡 Future Improvements
 
 More math levels and difficulty scaling
 
@@ -96,11 +96,11 @@ Different vehicle skins/upgrades
 
 Classroom/teacher mode
 
-👨‍💻 Team
+# 👨‍💻 Team
 
-Developed as a Unity-based educational game project.
+# Developed as a Unity-based educational game project. Team members: Daniel Quintanilla 🐐, Micheal Nkansah 👨‍💻, Bryan Esquivel 🎣, Rigo Amador 🦜, and Diego Sanchez🎱
 
-📄 License
+# 📄 License
 
 This project is for educational purposes.
 

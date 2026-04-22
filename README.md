@@ -1,6 +1,6 @@
-                                                      # Math Runner 🛣️🚗💨
+# Math Runner 🛣️🚗💨
 
-##📌 Overview
+ ## Overview📌
 
 Math Runner is a fast-paced educational Unity game designed for elementary-level students. Players control a moving vehicle that progresses forward by correctly solving basic math problems.
 
